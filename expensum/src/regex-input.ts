@@ -99,6 +99,22 @@ export class RegexInput extends LitElement {
   pairedDelim = false;
 
   /**
+   * Show input field labels
+   *
+   * @param showLabels
+   */
+  @property()
+  showLabels = false;
+
+  /**
+   * Disable user interaction with input fields
+   *
+   * @param disabled
+   */
+  @property()
+  disabled = false;
+
+  /**
    * Does the regex have any errors
    *
    * @var hasError
@@ -223,7 +239,6 @@ export class RegexInput extends LitElement {
       border: var(--ri-line-weight, 0.05rem) solid var(--ri-text-colour, #ccc);
       border-radius: var(--ri-border-radius);
       display: inline-flex;
-      font-family: var(--ri-input-font);
       font-size: 1.1rem;
       font-weight: bold;
       overflow: hidden;
@@ -234,6 +249,9 @@ export class RegexInput extends LitElement {
       outline-style: var(--ri-outline-style);
       outline-color: var(--ri-text-colour);
       outline-offset: var(--ri-outline-offset);
+    }
+    .wrap > span {
+      font-family: var(--ri-input-font);
     }
     input {
       background-color: var(--ri-bg-colour);
@@ -631,6 +649,10 @@ export class RegexInput extends LitElement {
       ? ' has-error'
       : ''
 
+    const labelClass = (this.showLabels === true)
+      ? 'sr-only'
+      : '';
+
     const open = (!this.noFlags && !this.noDelims)
       ? html`<span class="delim">${this._delimOpen}</span>`
       : ''
@@ -660,7 +682,7 @@ export class RegexInput extends LitElement {
 
     const flags = (this.noFlags === false)
       ? html`
-        <label for="${this.labelID}_flags" class="sr-only">
+        <label for="${this.labelID}_flags" class="${labelClass}">
           Flags
         </label>
         <input type="text"
@@ -673,6 +695,7 @@ export class RegexInput extends LitElement {
                @keyup=${this.flagKeyup}
                @change=${this.flagChange}
                style="width: ${this._flagSize}rem"
+               ?disabled=${this.disabled}
         />`
       : ''
 
@@ -681,7 +704,7 @@ export class RegexInput extends LitElement {
       <div aria-live="assertive" role="alert">${errors}</div>
       <span class="wrap">
         ${open}
-        <label for="${this.labelID}_regex" class="sr-only">
+        <label for="${this.labelID}_regex" class="${labelClass}">
           Regular expression
         </label>
         <input type="text"
@@ -694,6 +717,7 @@ export class RegexInput extends LitElement {
                @change=${this.regexChange}
                @keyup=${this.regexKeyup}
                style="width: ${this._regexSize}rem"
+               ?disabled=${this.disabled}
         />
         ${close}
         ${flags}
