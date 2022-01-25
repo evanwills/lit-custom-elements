@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Numeric input</title>
+    <script type="module" src="/src/regex-input.ts"></script>
+	<style>
+		:root {
+			--btn-colour: #fff;
+			--btn-bg-colour: rgb(0, 85, 34);
+			--txt-colour: #fff;
+			--bg-colour: #2d2b2b;
+			--border-radius: 0.75rem;
+		}
+		body {
+			background-color: var(--bg-colour);
+			color: var(--text-colour);
+		}
+	</style>
+  </head>
+  <body>
+    <!-- <duration-input id="imp" value="179">
+      <p>This is child content</p>
+    </duration-input> -->
+	<p>
+		<label for="regex">Regex</label>
+		<regex-input fieldid="regex" id="regex-input"></regex-input>
+	</p>
+
+
+	<script type="text/javascript">
+		function changer (e) {
+			console.group('duration-input event listener')
+			console.log('this:', this)
+			console.log('this.type:', this.type)
+			console.log('this.value:', this.value)
+			console.log('this.humanValue:', this.humanValue)
+			console.groupEnd()
+		}
+		const dollars = document.getElementById('dollars-input')
+		dollars.addEventListener('change', changer)
+		const percent = document.getElementById('percent-input')
+		percent.addEventListener('change', changer)
+		const gst = document.getElementById('gst-input')
+		gst.addEventListener('change', changer)
+	</script>
+  </body>
+</html>

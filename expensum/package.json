@@ -1,0 +1,62 @@
+{
+  "name": "expensum",
+  "version": "0.0.0",
+  "description": "A payment system for universities & other institutions that need something like an eCommerce system but normal eCommerce systems don't meet their requirements",
+
+  "main": "dist/regex-input.es.js",
+  "author": "Evan Wills",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evanwills/laravel-expensum.git"
+  },
+  "bugs": {
+    "url": "https://github.com/evanwills/laravel-expensum/issues"
+  },
+  "homepage": "https://github.com/evanwills/laravel-expensum#readme",
+  "keywords": [
+    "expenusm",
+    "lit-html",
+    "redux"
+  ],
+  "old": [
+    {
+      "main": "dist/duration-input.es.js",
+      "exports": {
+        ".": "./dist/duration-input.es.js"
+      },
+      "types": "types/duration-input.d.ts"
+    },
+    {
+      "main": "dist/numeric-input.es.js",
+      "exports": {
+        ".": "./dist/numeric-input.es.js"
+      },
+      "types": "types/numeric-input.d.ts"
+    }
+  ],
+  "exports": {
+    ".": "./dist/regex-input.es.js"
+  },
+  "types": "types/regex-input.d.ts",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "standard": "^16.0.4",
+    "stylelint": "^14.1.0",
+    "stylelint-config-standard": "^24.0.0",
+    "stylelint-order": "^5.0.0",
+    "vite": "^2.7.2",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "lit": "^2.0.2",
+    "redux": "^4.1.2"
+  }
+}
