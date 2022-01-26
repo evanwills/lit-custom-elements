@@ -1,6 +1,6 @@
 /** Globals Error */
-import { html, css, LitElement, } from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import { html, css, LitElement, TemplateResult, } from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
 @customElement('regex-input')
 export class RegexInput extends LitElement {
@@ -9,7 +9,7 @@ export class RegexInput extends LitElement {
    *
    * @var maxlength
    */
-  @property({ reflect: true })
+  @property({ reflect: true, type: String })
   value : string = '';
 
   /**
@@ -17,7 +17,7 @@ export class RegexInput extends LitElement {
    *
    * @var maxlength
    */
-  @property({ reflect: true })
+  @property({ reflect: true, type: String })
   flags : string = 'ig';
 
   /**
@@ -25,7 +25,7 @@ export class RegexInput extends LitElement {
    *
    * @var regexError
    */
-  @property({ reflect: true })
+  @property({ reflect: true, type: String })
   regexError : string = '';
 
   /**
@@ -33,7 +33,7 @@ export class RegexInput extends LitElement {
    *
    * @var maxlength
    */
-  @property()
+  @property({ type: String })
   allowedFlags : string = '';
 
   /**
@@ -42,7 +42,7 @@ export class RegexInput extends LitElement {
    *
    * @var maxlength
    */
-  @property()
+  @property({ type: Number })
   maxlength : number = 512;
 
   /**
@@ -50,16 +50,19 @@ export class RegexInput extends LitElement {
    *
    * @var labelID
    */
-  @property()
+  @property({ type: String })
   labelID : string = '';
 
   /**
-   * Hide the flags input field
+   * How to handle flags/modifiers
+   * * 'show' (default) Show flags and make them editable
+   * * 'disable' Show the flags but don't allow them to be edited
+   * * 'hide' Don't show the flags at all
    *
-   * @var noFlags
+   * @var flagState
    */
-  @property()
-  noFlags : boolean = false;
+  @property({ type: String })
+  flagState : string = 'show';
 
   /**
    * Regex engine is not ECMAscript (e.g. used for PHP PCRE or .Net)
@@ -69,7 +72,7 @@ export class RegexInput extends LitElement {
    *
    * @var notJs
    */
-  @property()
+  @property({ type: Boolean })
   notJs : boolean = false;
 
   /**
@@ -77,7 +80,7 @@ export class RegexInput extends LitElement {
    *
    * @var noDelims
    */
-  @property()
+  @property({ type: Boolean })
   noDelims : boolean = false;
 
   /**
@@ -85,7 +88,7 @@ export class RegexInput extends LitElement {
    *
    * @var delim
    */
-  @property()
+  @property({ type: String })
   delim : string = '/';
 
   /**
@@ -95,24 +98,32 @@ export class RegexInput extends LitElement {
    *
    * @param pairedDelim
    */
-  @property()
-  pairedDelim = false;
+  @property({ type: Boolean })
+  pairedDelim : boolean = false;
 
   /**
    * Show input field labels
    *
    * @param showLabels
    */
-  @property()
-  showLabels = false;
+  @property({ type: Boolean })
+  showLabels : boolean = false;
 
   /**
    * Disable user interaction with input fields
    *
    * @param disabled
    */
-  @property()
-  disabled = false;
+  @property({ type: Boolean })
+  disabled : boolean = false;
+
+  /**
+   * Whether or not testing UI should be available
+   *
+   * @param testable
+   */
+  @property({ type: Boolean })
+  testable : boolean = false;
 
   /**
    * Does the regex have any errors
@@ -135,7 +146,8 @@ export class RegexInput extends LitElement {
    *
    * @var _delimOpen
    */
-  _delimOpen : string = '/';
+  @state()
+  private _delimOpen : string = '/';
 
   /**
    * Closing delimiter character
@@ -144,42 +156,48 @@ export class RegexInput extends LitElement {
    *
    * @var _delimOpen
    */
-  _delimClose : string = '/';
+  @state()
+  private _delimClose : string = '/';
 
   /**
    * Number REMs wide the regex input field should be
    *
    * @var _regexSize
    */
-  _regexSize : number = 1.25;
+  @state()
+  private _regexSize : number = 1.25;
 
   /**
    * The number of REMs wide the flags input field should be
    *
    * @var _flagSize
    */
-  _flagSize : number = 1.4;
+  @state()
+  private _flagSize : number = 1.4;
 
   /**
    * List of allowed regex flags
    *
    * @var _alloweFlags
    */
-  _alloweFlags : Array<string> = ['i', 'g', 'd', 'm', 's', 'u', 'y'];
+  @state()
+  private _alloweFlags : Array<string> = ['i', 'g', 'd', 'm', 's', 'u', 'y'];
 
   /**
    * Default placeholder text for flags input
    *
    * @var _placeFlag
    */
-  _placeFlag : string = 'i'
+  @state()
+  private _placeFlag : string = 'i'
 
   /**
    * List of custom regex flags (if set by the client)
    *
    * @var _customAllowedFlags
    */
-  _customAllowedFlags : Array<string> = this._alloweFlags
+  @state()
+  private _customAllowedFlags : Array<string> = this._alloweFlags
 
 
   /**
@@ -187,7 +205,8 @@ export class RegexInput extends LitElement {
    *
    * @var _flagErrors
    */
-  _flagErrors : Array<string> = [];
+  @state()
+  private _flagErrors : Array<string> = [];
 
   /**
    * Whether or not initialisation of functions and values is
@@ -195,7 +214,51 @@ export class RegexInput extends LitElement {
    *
    * @var _initDone
    */
-  _initDone : boolean = false;
+  @state()
+  private _initDone : boolean = false;
+
+  /**
+   * Whether or not to render sample test UI
+   *
+   * @var _showTestUI
+   */
+  @state()
+  private _showTestUI : boolean = false;
+
+  /**
+   * Whether or not to render sample test UI
+   *
+   * @var _showTestUI
+   */
+  @state()
+  private _testSample : string = '';
+
+  /**
+   * Whether or not to split the sample before processing
+   *
+   * @var _splitSample
+   */
+  @state()
+  private _splitSample : boolean = false;
+
+  /**
+   * Whether or not to trim the sample(s) before processing
+   *
+   * @var _trimSample
+   */
+  @state()
+  private _trimSample : boolean = false;
+
+
+  /**
+   * Whether or not to trim the sample(s) before processing
+   *
+   * @var _showResults
+   */
+   @state()
+   private _showResults : boolean = false;
+
+
 
   static styles = css`
     :host {
@@ -244,6 +307,9 @@ export class RegexInput extends LitElement {
       overflow: hidden;
       padding: 0.2rem 0.5rem;
     }
+    .wrap.testing {
+      padding-right: 0.2rem;
+    }
     .wrap:focus-within {
       outline-width: var(--ri-outline-width);
       outline-style: var(--ri-outline-style);
@@ -286,6 +352,100 @@ export class RegexInput extends LitElement {
     }
     .errors li:first-child {
       margin-top: 0;
+    }
+    button {
+      background-color: var(--ri-text-colour);
+      border: none;
+      border-radius: var(--ri-border-radius);
+      color: var(--ri-bg-colour);
+      display: inline-block;
+      margin-left: 1rem;
+      padding: 0.05rem 0.5rem;
+      text-transform: uppercase;
+    }
+    button:hover {
+      cursor: pointer;
+    }
+    .close-bg {
+      background-color: #000;
+      bottom: -2rem;
+      left: -2rem;
+      opacity: 0.7;
+      position: fixed;
+      right: -2rem;
+      top: -2rem;
+      width: 150%;
+      z-index: 100;
+    }
+    .close {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+    }
+    .test-ui {
+      background-color: var(--ri-bg-colour);
+      box-shadow: 0.5rem 0.5rem 1.5rem rgba(0, 0, 0, 0.8);
+      border: var(--ri-line-weight) solid var(--ri-text-colour);
+      left: 4rem;
+      padding: 1rem;
+      position: fixed;
+      top: 4rem;
+      bottom: 4rem;
+      right: 4rem;
+      // min-height: 30rem;
+      // transform: translate(-50%, -50%);
+      // width: 75%;
+      z-index: 110;
+      display: flex;
+    }
+    .test-ui-inner {
+      flex-grow: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      grid-template-rows: auto auto auto 1fr;
+      grid-template-areas:
+        "errors errors"
+        "regex regex"
+        "sample controls"
+        "sample results";
+      grid-gap: 1rem;
+      // height: 30rem;
+    }
+    .error-block {
+      grid-area: errors;
+      height: 0;
+      padding-top: 0;
+    }
+    .error-block.has-errors {
+      height: auto;
+      padding-top: 0.75rem;
+    }
+    .regex {
+      grid-area: regex;
+      height: 1.5rem;
+    }
+    textarea {
+      grid-area: sample;
+    }
+    .controls {
+      grid-area: controls;
+    }
+    .test {
+      display: block;
+      margin: 0 0 0.5rem;
+      width: 100%;
+    }
+    .controls > label {
+      display: block;
+      margin: 0 0 0.5rem;
+      padding-left: 1.55rem;
+      text-indent: -1.55rem;
+    }
+    .test-results {
+      grid-area: results;
+    }
+    .regex .regex-pattern {
+      max-width: auto;
     }
   `;
 
@@ -476,6 +636,7 @@ export class RegexInput extends LitElement {
       this.regexError = this._ucFirst(e.message);
 
       return false;
+      console.error(regex);
     }
     // this.hasError = false;
     // this.regexError = '';
@@ -496,16 +657,35 @@ export class RegexInput extends LitElement {
       /^([^a-z]*)([a-z])/ig,
       (whole, first, char) => {
         return first + char.toUpperCase();
+        console.log(whole);
       }
     )
   }
 
-  _chars2rems (input: number) {
+  _chars2rems (input: number) : number {
     return Math.round((input * 0.675) * 100) / 100;
   }
 
   _escape (input : string) : string {
     return input.replace(/"/g, '&#34;')
+  }
+
+  _getValue (event : Event) : string {
+    event.preventDefault()
+    const input = event.target as HTMLInputElement;
+    return input.value;
+  }
+
+  _getIsChecked (event : Event) : boolean {
+    event.preventDefault()
+    const input = event.target as HTMLInputElement;
+    return input.checked;
+  }
+
+  _getTestResults () : TemplateResult {
+    this._showResults = false
+    this.requestUpdate();
+    return html`funky`;
   }
 
   //  END:  Private helper methods
@@ -520,9 +700,7 @@ export class RegexInput extends LitElement {
    * @param event
    */
   regexKeyup (event : Event) : void {
-    event.preventDefault()
-    const input = event.target as HTMLInputElement;
-    const tmp = this._getSize(input.value, false);
+    const tmp = this._getSize(this._getValue(event), false);
 
     if (tmp !== this._regexSize) {
       this._regexSize = tmp;
@@ -539,9 +717,7 @@ export class RegexInput extends LitElement {
    * @param event
    */
   regexChange (event : Event) : void {
-    event.preventDefault()
-    const input = event.target as HTMLInputElement;
-    const tmp = input.value;
+    const tmp = this._getValue(event);
 
     if (tmp !== this.value) {
       // We have a new regex string to work with.
@@ -579,27 +755,33 @@ export class RegexInput extends LitElement {
    */
   flagKeyup (event: Event) : void {
     event.preventDefault()
-
     const input = event.target as HTMLInputElement;
-    const value = this._cleanFlags(input.value)
-    const tmp = this._getSize(value, true);
-    let doUpdate = false;
 
-    if (tmp !== this._flagSize) {
-      this._flagSize = tmp;
-      doUpdate = true;
-    }
+    if (this.flagState === 'show') {
+      const value = this._cleanFlags(input.value)
+      const tmp = this._getSize(value, true);
+      let doUpdate = false;
 
-    if (this._flagErrors.length > 0) {
-      doUpdate = true;
-    }
+      if (tmp !== this._flagSize) {
+        this._flagSize = tmp;
+        doUpdate = true;
+      }
 
-    if (input.value !== value) {
-      input.value = value;
-    }
+      if (this._flagErrors.length > 0) {
+        doUpdate = true;
+      }
 
-    if (doUpdate === true) {
-      this.requestUpdate();
+      if (input.value !== value) {
+        input.value = value;
+      }
+
+      if (doUpdate === true) {
+        this.requestUpdate();
+      }
+    } else {
+      // someone has tried to do something naughty
+      // revert the flags to what they should be
+      input.value = this.flags;
     }
   }
 
@@ -612,20 +794,48 @@ export class RegexInput extends LitElement {
    * @param event
    */
   flagChange (event: Event) : void {
+    if (this.flagState === 'show') {
+      const value = this._cleanFlags(this._getValue(event))
+
+      if (this.flags !== value) {
+        // Flags have actually changed so let the outside world know
+        this.flags = value;
+        this._setWholeRegex()
+
+        this.dispatchEvent(
+          new Event('change', { bubbles: true, composed: true })
+        )
+      }
+    }
+  }
+
+  /**
+   * Event handler for toggling the Sample testing UI open & close
+   *
+   * @param event
+   */
+  toggleTestUI (event: Event) : void {
     event.preventDefault()
 
-    const input = event.target as HTMLInputElement;
-    const value = this._cleanFlags(input.value)
+    this._showTestUI = (this.testable)
+      ? !this._showTestUI
+      : false;
+  }
 
-    if (this.flags !== value) {
-      // Flags have actually changed so let the outside world know
-      this.flags = value;
-      this._setWholeRegex()
+  toggleSplit (event: Event) : void {
+    this._splitSample = this._getIsChecked(event)
+  }
 
-      this.dispatchEvent(
-        new Event('change', { bubbles: true, composed: true })
-      )
-    }
+  toggleTrim (event: Event) : void {
+    this._trimSample = this._getIsChecked(event)
+  }
+
+  sampleChange (event: Event) : void {
+    this._testSample = this._getValue(event)
+  }
+
+  runTest () : void {
+    this._showResults = true;
   }
 
   //  END:  Private helper methods
@@ -633,95 +843,183 @@ export class RegexInput extends LitElement {
   // START: Public methods
 
   /**
-   * Render the input field
+   * Render the user interface for sample test
    *
-   * @returns {html}
+   * @param regexUI   Input fields for
+   * @param hasErrors Whether or not there are any errors in the regex
+   * @param errors    Rendered error HTML (or empty string)
+   *
+   * @returns
    */
-  render() {
-    // console.group('render()')
-    this._doInit();
+  renderTestUI (hasErrors : boolean, errors : TemplateResult|string) : TemplateResult {
+    return html`
+    <button class="close-bg" @click=${this.toggleTestUI}>Close</button>
+    <section class="test-ui">
+      <button class="close" @click=${this.toggleTestUI}>Close</button>
+      <div class="test-ui-inner">
+        <div class="error-block${(hasErrors) ? ' has-errors' : ''}" aria-live="assertive" role="alert">${errors}</div>
+        <div class="regex">
+          <span class="wrap">${this.renderRegex()}</span>
+        </div>
+        <textarea>${this._testSample}</textarea>
+        <div class="controls">
+          <button class="test" @click=${this.runTest}>Run test</button>
+          <label>
+            <input type="checkbox"
+                   .checked=${this._splitSample}
+                   @change=${this.toggleSplit} />
+            Spilt sample on new line
+          </label>
+          <label>
+            <input type="checkbox"
+                   .checked=${this._trimSample}
+                   @change=${this.toggleTrim} />
+            Trim sample${(this._splitSample) ? 's' : ''}
+          </label>
+        </div>
+        <div class="test-results" aria-live="polite">
+          ${(this._showResults)
+            ? this._getTestResults()
+            : ''
+          }
+        </div>
+      </div>
+    </section>`;
+  }
 
-    const regexClass = (this.regexError !== '')
-      ? ' has-error'
-      : ''
-
+  /**
+   * Render the flags input fields
+   *
+   * @param labelClass whether or not the label should be shown or
+   *                   hidden
+   * @returns
+   */
+  renderFlags(labelClass: string) : TemplateResult|string {
     const flagsClass = (this._flagErrors.length > 0)
       ? ' has-error'
       : ''
 
-    const labelClass = (this.showLabels === true)
-      ? 'sr-only'
+    return (this.flagState !== 'hide')
+      ? html`
+        <label for="${this.labelID}_flags" class="${labelClass}">
+          Flags
+        </label>
+        <input type="text"
+              id="${this.labelID}_flags"
+              name="${this.labelID}_flags"
+              class="regex-flags${flagsClass}"
+              .value="${this.flags}"
+              placeholder="${this._placeFlag}"
+              minlength="7"
+              @keyup=${this.flagKeyup}
+              @change=${this.flagChange}
+              style="width: ${this._flagSize}rem"
+              ?disabled=${(this.disabled || this.flagState == 'disabled')}
+        />`
       : '';
+  }
 
-    const open = (!this.noFlags && !this.noDelims)
+  /**
+   * Render the regex & flags input fields along with the delimiters
+   * @returns html
+   */
+  renderRegex() : TemplateResult {
+    const regexClass = (this.regexError !== '')
+      ? ' has-error'
+      : ''
+
+    const labelClass = (this.showLabels === true)
+      ? ''
+      : 'sr-only';
+
+    const open = (this.flagState !== 'hide' && !this.noDelims)
       ? html`<span class="delim">${this._delimOpen}</span>`
       : ''
-    const close = (!this.noFlags && !this.noDelims)
+    const close = (this.flagState !== 'hide' && !this.noDelims)
       ? html`<span class="delim">${this._delimClose}</span>`
       : ''
+
+    return html`
+      ${open}
+      <label for="${this.labelID}_regex" class="${labelClass}">
+        Regular expression
+      </label>
+      <input type="text"
+            id="${this.labelID}_regex"
+            name="${this.labelID}_regex"
+            class="regex-pattern${regexClass}"
+            .value="${this._escape(this.value)}"
+            placeholder=".*"
+            minlength="${this.maxlength}"
+            @change=${this.regexChange}
+            @keyup=${this.regexKeyup}
+            style="width: ${this._regexSize}rem"
+            ?disabled=${this.disabled}
+      />
+      ${close}
+      ${this.renderFlags(labelClass)}`
+  }
+
+  /**
+   * Render the primary UI
+   *
+   * @returns {TemplateResult}
+   */
+  render() {
+    console.group('render()')
+    this._doInit();
 
     const allErrors = (this.regexError !== '')
       ? [this.regexError, ...this._flagErrors]
       : [...this._flagErrors]
 
-    const errors = (allErrors.length > 1)
-      ? html`
-      <div class="errors">
-        <strong>Errors:</strong>
-        <ul>
-          ${allErrors.map(error => html`<li>${error}</li>`)}
-        </ul>
-      </div>`
+    const hasErrors = (allErrors.length >= 1)
+
+    const errors = (hasErrors === false)
+      ? ''
       : (allErrors.length === 1)
         ? html`
           <p class="errors">
             <strong>Error:</strong>
             ${allErrors[0]}
           </p>`
-        : '';
+        :html`
+          <div class="errors">
+            <strong>Errors:</strong>
+            <ul>
+              ${allErrors.map(error => html`<li>${error}</li>`)}
+            </ul>
+          </div>`;
 
-    const flags = (this.noFlags === false)
-      ? html`
-        <label for="${this.labelID}_flags" class="${labelClass}">
-          Flags
-        </label>
-        <input type="text"
-               id="${this.labelID}_flags"
-               name="${this.labelID}_flags"
-               class="regex-flags${flagsClass}"
-               .value="${this.flags}"
-               placeholder="${this._placeFlag}"
-               minlength="7"
-               @keyup=${this.flagKeyup}
-               @change=${this.flagChange}
-               style="width: ${this._flagSize}rem"
-               ?disabled=${this.disabled}
-        />`
+    // console.log('this.testable:', this.testable)
+    // console.log('this.testable === true:', this.testable === true)
+    // console.log('hasErrors:', hasErrors)
+    // console.log('hasErrors === false:', hasErrors === false)
+    // console.log('this.value:', this.value)
+    // console.log('this.value !== "":', this.value !== '')
+    const showBtn = (this.testable === true &&
+                     hasErrors === false &&
+                     this.value !== '');
+
+    const testBtn = (showBtn === true)
+      ? html`<button @click=${this.toggleTestUI}>Test</button>`
       : ''
+
+    const testClass = (showBtn === true) ? ' testing' : '';
+
+    const UI = this.renderRegex();
+
+    console.groupEnd();
 
     return html`
     <div class="whole">
       <div aria-live="assertive" role="alert">${errors}</div>
-      <span class="wrap">
-        ${open}
-        <label for="${this.labelID}_regex" class="${labelClass}">
-          Regular expression
-        </label>
-        <input type="text"
-               id="${this.labelID}_regex"
-               name="${this.labelID}_regex"
-               class="regex-pattern${regexClass}"
-               .value="${this._escape(this.value)}"
-               placeholder=".*"
-               minlength="${this.maxlength}"
-               @change=${this.regexChange}
-               @keyup=${this.regexKeyup}
-               style="width: ${this._regexSize}rem"
-               ?disabled=${this.disabled}
-        />
-        ${close}
-        ${flags}
+      <span class="wrap${testClass}">
+        ${(!this._showTestUI) ? this.renderRegex() : ''}
+        ${testBtn}
       </span>
-    </div>`;
+    </div>${(this._showTestUI)
+      ? this.renderTestUI(hasErrors, errors)
+      : ''}`;
   }
 }

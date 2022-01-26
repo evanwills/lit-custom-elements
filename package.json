@@ -1,5 +1,5 @@
 {
-  "name": "expensum",
+  "name": "regex-input",
   "version": "0.0.0",
   "description": "A payment system for universities & other institutions that need something like an eCommerce system but normal eCommerce systems don't meet their requirements",
 
@@ -26,6 +26,13 @@
         ".": "./dist/duration-input.es.js"
       },
       "types": "types/duration-input.d.ts"
+    },
+    {
+      "main": "dist/regex-input.es.js",
+      "exports": {
+        ".": "./dist/regex-input.es.js"
+      },
+      "types": "types/regex-input.d.ts"
     },
     {
       "main": "dist/numeric-input.es.js",
