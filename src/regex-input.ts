@@ -425,7 +425,6 @@ export class RegexInput extends LitElement {
         "sample controls"
         "sample results";
       grid-gap: 1rem;
-      // height: 30rem;
     }
     .error-block {
       grid-area: errors;
@@ -445,11 +444,17 @@ export class RegexInput extends LitElement {
     }
     .controls {
       grid-area: controls;
+      display: grid;
+      grid-template-columns: auto;
+      grid-template-areas: 'test-btn'
+                           'split-box'
+                           'trim-box';
     }
-    .test {
+    .test-btn {
       display: block;
       margin: 0 0 0.5rem;
       width: 100%;
+      grid-area: test-btn;
     }
     .controls > label {
       display: block;
@@ -459,9 +464,54 @@ export class RegexInput extends LitElement {
     }
     .test-results {
       grid-area: results;
+      overflow-y: auto;
     }
     .regex .regex-pattern {
       max-width: auto;
+    }
+    .match-result p {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+    }
+    .match-result code {
+      font-size: 1.25rem;
+    }
+    .multi-match {
+      margin: 0;
+      padding: 0;
+    }
+    .multi-match > li {
+      list-style-type: none;
+      padding: 0.5rem 0 0 0;
+      border-top: var(--ri-line-width) dotted var(--ri-text-colour);
+      margin-bottom: 0.5rem;
+    }
+    .multi-match > li:first-child {
+      border-top: none;
+      padding-top: none;
+    }
+    @media screen and (min-width: 52rem) {
+      .controls {
+        width: 100%;
+        grid-template-areas: 'test-btn test-btn'
+                             'split-box trim-box';
+      }
+      .split-checkbox {
+        grid-area: split-box;
+      }
+      .trim-checkbox {
+        grid-area: trim-box;
+      }
+    }
+    @media screen and (min-width: 60rem) {
+      .controls {
+        width: 100%;
+        grid-template-areas: 'test-btn split-box trim-box';
+      }
+      .split-checkbox {
+        padding-left: 3rem !important;
+      }
     }
   `;
 
@@ -720,9 +770,55 @@ export class RegexInput extends LitElement {
   }
 
   _getTestResults () : TemplateResult {
-    this._showResults = false
-    this.requestUpdate();
+    console.group('_getTestResults()')
+    this._showResults = false;
+    console.log('this.regexError:', this.regexError)
+    console.log('this.flags:', this.flags)
+    console.log('this._testSample:', this._testSample)
+
+    const regex = new RegExp(this.pattern, this.flags);
+
+    if (this.regexError === '') {
+      const samples = (this._splitSample)
+        ? this._testSample.split("\n")
+        : [this._testSample];
+
+      if (this._trimSample) {
+        for (let a = 0; a < samples.length; a += 1) {
+          samples[a] = samples[a].trim();
+        }
+      }
+      console.log('samples:', samples);
+      console.groupEnd()
+      this.requestUpdate();
+      return (samples.length > 1)
+        ? html`<ul class="multi-match">${samples.map(item => html`<li>${this._singleTestResult(item, regex)}</li>`)}</ul>`
+        : this._singleTestResult(samples[0], regex);
+    } else {
+      console.groupEnd()
+      this.requestUpdate();
+      return html`Regular expression invalid: <code>${this.regexError}</code>`;
+    }
+
+
     return html`funky`;
+  }
+
+  _singleTestResult (str : string, regex : RegExp) : TemplateResult {
+    const matches : Array<string>|null = str.match(regex)
+    console.group('_singleTestResult()');
+    console.log('str:', str);
+    console.log('regex:', regex);
+    console.log('matches:', matches);
+    console.groupEnd();
+    return html`
+    <div class="match-result">
+      <p><strong>Sample:</strong> <code>${str}</code></p>
+      ${(matches === null)
+        ? html`<p>Nothing was matched</p>`
+        : html`<ol class="result-matches">${matches.map(match => html`<li><code>${match}</code></li>`)}</ol>`}
+    </div>
+    `
   }
 
   //  END:  Private helper methods
@@ -918,16 +1014,16 @@ export class RegexInput extends LitElement {
         <div class="regex">
           <span class="wrap">${this.renderRegex()}</span>
         </div>
-        <textarea>${this._testSample}</textarea>
+        <textarea @change=${this.sampleChange}>${this._testSample}</textarea>
         <div class="controls">
-          <button class="test" @click=${this.runTest}>Run test</button>
-          <label>
+          <button class="test-btn" @click=${this.runTest}>Run test</button>
+          <label class="split-checkbox">
             <input type="checkbox"
                    .checked=${this._splitSample}
                    @change=${this.toggleSplit} />
             Spilt sample on new line
           </label>
-          <label>
+          <label class="trim-checkbox">
             <input type="checkbox"
                    .checked=${this._trimSample}
                    @change=${this.toggleTrim} />

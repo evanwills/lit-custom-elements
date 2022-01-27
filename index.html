@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Numeric input</title>
+		<title>Regex input</title>
 		<script type="module" src="/src/regex-input.ts"></script>
 		<style>
 			:root {
@@ -36,6 +36,10 @@
 		<!-- <duration-input id="imp" pattern="179">
 		<p>This is child content</p>
 		</duration-input> -->
+		<p class="field">
+			<label for="regex8">Regex (test-ui)</label>
+			<regex-input pattern="^[a-z]+$" fieldid="regex8" id="regex-input--8" autofocus flags="ig" focus testable></regex-input>
+		</p>
 		<p class="field">
 			<label for="regex1">Regex (invalid characer class)</label>
 			<regex-input pattern="[" fieldid="regex1" id="regex-input--1" flags="xz"></regex-input>
@@ -81,7 +85,7 @@
 				if (document.readyState === 'complete' ||
 					document.readyState === 'interactive'
 				) {
-					for (let a = 1; a < 8; a += 1) {
+					for (let a = 1; a <= 8; a += 1) {
 						const reg = document.getElementById('regex-input--' + a);
 						reg.addEventListener('change', changer)
 						// console.log('reg' + a + ':', reg)
