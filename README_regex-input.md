@@ -100,7 +100,7 @@ allows the client to provide an error message supplied by the
 external engine.
 
 ```html
-<regex-input pattern="(?<=[a-z]+)asdlfk"
+<regex-input pattern="(?<=[a-z]+) [0-9]+\."
              flags=""
              notjs
              allowedflags="ismxADSUXJu"
@@ -117,6 +117,10 @@ The maximum character length of the regular expression can be
 ```html
 <regex-input pattern="" flags="" maxlength="128"></regex-input>
 ```
+
+> __NOTE:__ When a pattern change event occurs, the pattern string
+            is always truncated to the maximum length allowed before
+            it's validated.
 
 ### `labelid` *{string}*
 

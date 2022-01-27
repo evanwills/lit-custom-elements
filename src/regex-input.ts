@@ -737,10 +737,29 @@ export class RegexInput extends LitElement {
    * @param event
    */
   regexKeyup (event : Event) : void {
-    const tmp = this._getSize(this._getValue(event), false);
+    event.preventDefault()
+    const errorMsg = 'Pattern exceded ' + this.maxlength +
+                     ' so was truncated.'
+    const input = event.target as HTMLInputElement;
+    const raw = input.value;
+    const tmp = raw.substring(0, this.maxlength);
 
-    if (tmp !== this._regexSize) {
-      this._regexSize = tmp;
+    const size = this._getSize(tmp, false);
+    let doUpdate = false;
+
+    if (size !== this._regexSize) {
+      this._regexSize = size;
+      doUpdate = true;
+    }
+    if (raw !== tmp) {
+      this.regexError = errorMsg;
+      input.value = tmp;
+      doUpdate = true;
+    } else if (this.regexError ===  errorMsg) {
+      this.regexError = '';
+    }
+
+    if (doUpdate) {
       this.requestUpdate();
     }
   }
@@ -754,7 +773,8 @@ export class RegexInput extends LitElement {
    * @param event
    */
   regexChange (event : Event) : void {
-    const tmp = this._getValue(event);
+    const raw = this._getValue(event);
+    const tmp = raw.substring(0, this.maxlength);
 
     if (tmp !== this.pattern) {
       // We have a new regex string to work with.
