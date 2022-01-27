@@ -126,6 +126,20 @@ export class RegexInput extends LitElement {
   testable : boolean = false;
 
   /**
+   * Allow invalid regexes to trigger change events.
+   *
+   * By default, invalid regex patterns will not trigger a change
+   * event on the parent. If using an external regex engine,
+   * sometimes things that are invalid for ECMAscript RegExp will
+   * be valid in that engine. This will cause all changes to the
+   * pattern to trigger a change event.
+   *
+   * @param allowInvalid
+   */
+  @property({ type: Boolean })
+  allowInvalid : boolean = false;
+
+  /**
    * Does the regex have any errors
    *
    * @var hasError
@@ -499,6 +513,7 @@ export class RegexInput extends LitElement {
         ? this._getSize(this.flags, true)
         : this._getSize(this._placeFlag, true);
 
+      this.flagState = this.flagState.toLowerCase();
       switch (this.flagState) {
         case 'hide':
         case 'show':
@@ -517,6 +532,8 @@ export class RegexInput extends LitElement {
         this._regexSize = this._getSize(this.pattern, false);
         this._regexIsValid(this.pattern, this.flags);
       }
+
+      this.allowInvalid = (this.notJs && this.allowInvalid)
 
       if (this.notJs === true && this.delim !== '' && this.delim !== '/') {
         const tmp = this.delim.trim().substring(0, 1);
@@ -647,10 +664,15 @@ export class RegexInput extends LitElement {
       regex = new RegExp(regexStr, flagsStr)
     } catch (e : any) {
       // Regex has an error lets deal with that
+
       this.hasError = true;
       this.regexError = this._ucFirst(e.message);
 
-      return false;
+      // If this is not for ECMAscript RegExp and client wants to
+      // allow invalid regexes then we'll give them what they want
+      // This will allow change event to be triggered allowInvalid
+      // is true
+      return this.allowInvalid;
       console.error(regex);
     }
     // this.hasError = false;
@@ -914,24 +936,32 @@ export class RegexInput extends LitElement {
       ? ' has-error'
       : ''
 
-    return (this.flagState !== 'hide')
-      ? html`
-        <label for="${this.labelID}_flags" class="${labelClass}">
-          Flags
-        </label>
-        <input type="text"
-              id="${this.labelID}_flags"
-              name="${this.labelID}_flags"
-              class="regex-flags${flagsClass}"
-              .value="${this.flags}"
-              placeholder="${this._placeFlag}"
-              minlength="7"
-              @keyup=${this.flagKeyup}
-              @change=${this.flagChange}
-              style="width: ${this._flagSize}rem"
-              ?disabled=${(this.disabled || this.flagState == 'disabled')}
-        />`
-      : '';
+    switch (this.flagState) {
+      case 'hide':
+        return '';
+
+      case 'disabled':
+        return html`<span class="flags">${this.flags}</span>`;
+
+      default:
+    }
+    return html`
+      <label for="${this.labelID}_flags" class="${labelClass}">
+        Flags
+      </label>
+      <input type="text"
+            id="${this.labelID}_flags"
+            name="${this.labelID}_flags"
+            class="regex-flags${flagsClass}"
+            .value="${this.flags}"
+            placeholder="${this._placeFlag}"
+            minlength="7"
+            @keyup=${this.flagKeyup}
+            @change=${this.flagChange}
+            style="width: ${this._flagSize}rem"
+            ?disabled=${(this.disabled || this.flagState == 'disabled')}
+            title="regular expression flags (modifiers)"
+      />`;
   }
 
   /**
@@ -954,25 +984,30 @@ export class RegexInput extends LitElement {
       ? html`<span class="delim">${this._delimClose}</span>`
       : ''
 
-    return html`
-      ${open}
-      <label for="${this.labelID}_regex" class="${labelClass}">
-        Regular expression
-      </label>
-      <input type="text"
-            id="${this.labelID}_regex"
-            name="${this.labelID}_regex"
-            class="regex-pattern${regexClass}"
-            .value="${this._escape(this.pattern)}"
-            placeholder=".*"
-            minlength="${this.maxlength}"
-            @change=${this.regexChange}
-            @keyup=${this.regexKeyup}
-            style="width: ${this._regexSize}rem"
-            ?disabled=${this.disabled}
-      />
-      ${close}
-      ${this.renderFlags(labelClass)}`
+    const flags = this.renderFlags(labelClass)
+
+    return (!this.disabled)
+      ? html`
+        ${open}
+        <label for="${this.labelID}_regex" class="${labelClass}">
+          Regular expression
+        </label>
+        <input type="text"
+              id="${this.labelID}_regex"
+              name="${this.labelID}_regex"
+              class="regex-pattern${regexClass}"
+              .value="${this._escape(this.pattern)}"
+              placeholder=".*"
+              minlength="${this.maxlength}"
+              @change=${this.regexChange}
+              @keyup=${this.regexKeyup}
+              style="width: ${this._regexSize}rem"
+              ?disabled=${this.disabled}
+              title="regular expression pattern"
+        />
+        ${close}
+        ${flags}`
+      : html`${open}${this.pattern}${close}${flags}`
   }
 
   /**
@@ -1033,7 +1068,7 @@ export class RegexInput extends LitElement {
         ${(!this._showTestUI) ? this.renderRegex() : ''}
         ${testBtn}
       </span>
-    </div>${(this._showTestUI)
+    </div>${(this._showTestUI && !this.disabled)
       ? this.renderTestUI(hasErrors, errors)
       : ''}`;
   }
